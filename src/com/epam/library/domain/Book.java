@@ -61,4 +61,15 @@ public class Book extends Entity{
     public void setDateOfPublishing(int dateOfPublishing) {
         this.dateOfPublishing = dateOfPublishing;
     }
+
+    @Override
+    public String toString() {
+        return "Book{" +
+                "bookId=" + bookId +
+                ", title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                ", brief='" + brief + '\'' +
+                ", dateOfPublishing=" + dateOfPublishing +
+                '}';
+    }
 }

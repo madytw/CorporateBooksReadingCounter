@@ -1,6 +1,7 @@
 package com.epam.library.DAO;
 
 import com.epam.library.domain.Employee;
+import com.epam.library.exception.DAOException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,17 +14,16 @@ import java.util.Map;
  */
 
 public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
-    private static final String SELECT_EMPLOYEE_BY_ID = "SELECT FROM employee WHERE id=?";
-    private static final String SELECT_MORE_THAN_STATISTICS = "SELECT id, `name`, date_of_birth, email , COUNT(*) as amount  FROM employee JOIN " +
-            "book_has_employee ON id=employee_id WHERE (SELECT COUNT(*) FROM book_has_employee WHERE employee_id=id) > ? ORDER BY amount";
-    private static final String INSERT_NEW_EMPLOYEE = "INSERT INTO employee (id, `name`, date_of_birth, email) VALUES (?, ?, ?, ?, ?)";
+    private static final String SELECT_EMPLOYEE_BY_ID = "SELECT * FROM employee WHERE id=?";
+    private static final String SELECT_MORE_THAN_STATISTICS = "SELECT id, `name`, date_of_birth, email , COUNT(book_id) as amount  FROM employee JOIN " +
+            "book_has_employee ON id=employee_id GROUP BY id HAVING amount>? ORDER BY amount ASC";
+    private static final String INSERT_NEW_EMPLOYEE = "INSERT INTO employee (id, `name`, date_of_birth, email) VALUES (?, ?, ?, ?)";
     private static final String DELETE_EMPLOYEE_BY_ID = "DELETE FROM employee WHERE id=?";
     private static final String UPDATE_EMPLOYEE = "UPDATE employee SET `name`=?, date_of_birth=?, email=? WHERE id=?";
-    private static final String SELECT_LESS_EQUAL_STATISTICS = "SELECT id, `name`, date_of_birth, email , COUNT(*) as amount  FROM employee JOIN " +
-            "book_has_employee ON id=employee_id WHERE (SELECT COUNT(*) FROM book_has_employee WHERE employee_id=id) <= ? ORDER BY amount";
-
+    private static final String SELECT_LESS_EQUAL_STATISTICS = "SELECT id, `name`, date_of_birth, email , COUNT(book_id) as amount  FROM employee JOIN " +
+            "book_has_employee ON id=employee_id GROUP BY id HAVING amount<=? ORDER BY amount ASC";
     @Override
-    public Employee findEntityById(Integer id) {
+    public Employee findEntityById(Integer id) throws DAOException {
         Employee employee = null;
         PreparedStatement ps = null;
         try {
@@ -32,7 +32,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
             ResultSet rs = ps.executeQuery();
             employee = takeEmployees(rs).get(0);
         }catch (SQLException e){
-            e.printStackTrace();
+            throw new DAOException("DAOException: " + e);
         }finally {
             closeStatement(ps);
         }
@@ -40,7 +40,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
     }
 
     @Override
-    public boolean create(Employee entity) {
+    public boolean create(Employee entity) throws DAOException{
 
         boolean isCreated = false;
         PreparedStatement ps = null;
@@ -56,7 +56,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
                 entity.setEmployeeId(rs.getInt(1));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DAOException("DAOException: " + e);
         }finally {
             closeStatement(ps);
         }
@@ -64,7 +64,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
     }
 
     @Override
-    public boolean delete(Integer id) {
+    public boolean delete(Integer id) throws DAOException{
         boolean isDeleted = false;
         PreparedStatement ps = null;
         try {
@@ -72,7 +72,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
             ps.setInt(1, id);
             isDeleted = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DAOException("DAOException: " + e);
         } finally {
             closeStatement(ps);
         }
@@ -80,7 +80,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
     }
 
     @Override
-    public boolean update(Employee entity) {
+    public boolean update(Employee entity) throws DAOException{
         boolean isUpdated = false;
         PreparedStatement ps = null;
         try {
@@ -91,14 +91,14 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
             ps.setInt(4, entity.getEmployeeId());
             isUpdated = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DAOException("DAOException: " + e);
         } finally {
             closeStatement(ps);
         }
         return isUpdated;
     }
 
-    public Map<Employee, Integer> findEmployeesWithNumberOfBooksMoreThan(int minAmountOfBooks){
+    public Map<Employee, Integer> findEmployeesWithNumberOfBooksMoreThan(int minAmountOfBooks) throws DAOException{
         Map<Employee, Integer> report = new LinkedHashMap<>();
         PreparedStatement ps = null;
         try {
@@ -114,14 +114,14 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
                 report.put(employee, rs.getInt("amount"));
             }
         }catch (SQLException e){
-            e.printStackTrace();
+            throw new DAOException("DAOException: " + e);
         }finally {
             closeStatement(ps);
         }
         return report;
     }
 
-    public Map<Employee, Integer> findEmployeesWithNumberOfBooksLessEqThan(int maxAmountOfBooks){
+    public Map<Employee, Integer> findEmployeesWithNumberOfBooksLessEqThan(int maxAmountOfBooks) throws DAOException{
         Map<Employee, Integer> report = new LinkedHashMap<>();
         PreparedStatement ps = null;
         try {
@@ -137,7 +137,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
                 report.put(employee, rs.getInt("amount"));
             }
         }catch (SQLException e){
-            e.printStackTrace();
+            throw new DAOException("DAOException: " + e);
         }finally {
             closeStatement(ps);
         }
@@ -145,7 +145,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
     }
 
 
-    private List<Employee> takeEmployees(ResultSet rs) {
+    private List<Employee> takeEmployees(ResultSet rs) throws DAOException{
         List<Employee> employees = new ArrayList<>();
         try {
             while (rs.next()) {
@@ -157,7 +157,7 @@ public class EmployeeDAO extends AbstractDAO<Integer, Employee> {
                 employees.add(employee);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DAOException("DAOException: " + e);
         }
         return employees;
     }

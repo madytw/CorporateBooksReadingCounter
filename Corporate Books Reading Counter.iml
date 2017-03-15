@@ -8,5 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Tomcat 8.5.8" level="application_server_libraries" />
+    <orderEntry type="library" name="mysql-connector-java-5_1_40" level="project" />
+    <orderEntry type="library" name="log4j-api-2.5" level="project" />
   </component>
 </module>
